@@ -25,7 +25,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import rogueone.quizfight.adapters.DuelSummaryAdapter;
 import rogueone.quizfight.models.Duel;
-import rogueone.quizfight.models.History;
 import rogueone.quizfight.models.Question;
 import rogueone.quizfight.models.Score;
 import rogueone.quizfight.rest.api.GetProgress;
@@ -99,7 +98,7 @@ public class HomeActivity extends SavedGamesActivity {
             }
         });
 
-        getGames();
+        //getGames(); --> Invoked in onResume
     }
 
     /**
@@ -194,10 +193,16 @@ public class HomeActivity extends SavedGamesActivity {
         }
     }
 
+
+
     @Override
     public void onResume() {
         super.onResume();
-        getGames();
+        if (configurationChanged) {
+            updateHistory();
+        } else {
+            getGames();
+        }
     }
 
     /* TODO To be tested

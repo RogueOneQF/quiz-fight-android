@@ -12,6 +12,7 @@ import com.google.android.gms.games.snapshot.Snapshot;
 
 import java.io.IOException;
 
+import rogueone.quizfight.fragments.SavedGamesFragment;
 import rogueone.quizfight.loaders.SavedGamesLoader;
 import rogueone.quizfight.models.History;
 
@@ -36,6 +37,10 @@ import static rogueone.quizfight.utils.SavedGames.byteToHistory;
 public abstract class SavedGamesActivity extends AppCompatActivity implements
     LoaderManager.LoaderCallbacks<Snapshot> {
     private static final int SAVED_GAMES_LOADER = 1;
+    private static final String SAVED_GAMES_FRAGMENT = "SavedGamesFragment";
+
+    private SavedGamesFragment savedGamesFragment;
+    protected boolean configurationChanged;
 
     protected Snapshot snapshot;
     protected History history = new History();
@@ -43,6 +48,17 @@ public abstract class SavedGamesActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        savedGamesFragment = (SavedGamesFragment) getFragmentManager().findFragmentByTag(SAVED_GAMES_FRAGMENT);
+        Log.d("CONF", savedGamesFragment + "");
+        if (savedGamesFragment != null) {
+            history = savedGamesFragment.getHistory();
+            snapshot = savedGamesFragment.getSnapshot();
+            configurationChanged = true;
+        } else {
+            savedGamesFragment = new SavedGamesFragment();
+            getFragmentManager().beginTransaction().add(savedGamesFragment, SAVED_GAMES_FRAGMENT).commit();
+        }
     }
 
     @Override
@@ -65,6 +81,8 @@ public abstract class SavedGamesActivity extends AppCompatActivity implements
         if (snapshot != null && snapshot.getSnapshotContents() != null) {
             try {
                 history = byteToHistory(snapshot.getSnapshotContents().readFully());
+                savedGamesFragment.setSnapshot(snapshot);
+                savedGamesFragment.setHistory(history);
                 onLoadFinished(true);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -81,7 +99,7 @@ public abstract class SavedGamesActivity extends AppCompatActivity implements
     protected boolean getGames() {
         QuizFightApplication application = (QuizFightApplication) getApplication();
         if (application != null && application.getClient() != null && application.getClient().isConnected()) {
-            getLoaderManager().initLoader(SAVED_GAMES_LOADER, null, this);
+            getLoaderManager().restartLoader(SAVED_GAMES_LOADER, null, this);
             return true;
         }
         return false;
